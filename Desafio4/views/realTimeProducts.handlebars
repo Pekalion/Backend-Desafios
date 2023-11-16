@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Productos en Tiempo Real</title>
+    <script src="https://cdn.socket.io/4.1.2/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const socket = io();
+            const productList = document.getElementById('realTimeProductList');
+
+            // Escuchar eventos de actualización de productos
+            socket.on('updateProductList', (data) => {
+                // Lógica para actualizar la lista de productos en tiempo real
+                updateProductList(data);
+            });
+
+            // Actualizar la lista de productos en el DOM
+            function updateProductList(data) {
+                const { action, product } = data;
+
+                if (action === 'add') {
+                    // Agregar el nuevo producto a la lista
+                    const newItem = document.createElement('li');
+                    newItem.textContent = `${product.title} - ${product.price}`;
+                    productList.appendChild(newItem);
+                } else if (action === 'delete') {
+                    // Eliminar el producto de la lista (por ejemplo, por ID)
+                    const productId = product.id;
+                    const items = productList.getElementsByTagName('li');
+                    for (let i = 0; i < items.length; i++) {
+                        if (items[i].textContent.includes(productId)) {
+                            items[i].remove();
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Manejar el envío del formulario
+            const productForm = document.getElementById('productForm');
+            productForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+
+                // Obtener datos del formulario (por ejemplo, title, description, price, etc.)
+                const formData = {
+                    title: document.getElementById('title').value,
+                    description: document.getElementById('description').value,
+                    price: document.getElementById('price').value,
+                    // Otros campos del formulario
+                };
+
+                // Emitir evento al servidor para agregar un nuevo producto
+                socket.emit('addProduct', formData);
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Lista de Productos en Tiempo Real</h1>
+    
+    <ul id="realTimeProductList">
+        {{#each products}}
+            <li>{{this.title}} - {{this.price}}</li>
+        {{/each}}
+    </ul>
+
+    <form id="productForm">
+        <label for="title">Título:</label>
+        <input type="text" id="title" name="title" required>
+        
+        <label for="description">Descripción:</label>
+        <textarea id="description" name="description" required></textarea>
+        
+        <label for="price">Precio:</label>
+        <input type="number" id="price" name="price" required>
+        
+        <!-- Otros campos del formulario -->
+
+        <button type="submit">Agregar Producto</button>
+    </form>
+</body>
+</html>
